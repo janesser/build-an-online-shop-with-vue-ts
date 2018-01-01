@@ -1,26 +1,35 @@
+/// <reference path="../i18n/i18next-ext.d.ts" />
+
 import Vue from 'vue'
 import Component from 'vue-class-component'
-
-const langs = ['de', 'fr', 'en']
+import { NoCache } from '../decorators'
 
 @Component
 export default class Translate extends Vue {
 
-  i = 0
+  private langs: string[]
 
-  get curLang(): string {
-    return langs[this.i]
+  @NoCache
+  get curLang() {
+    const i18next = this.$i18n.i18next
+    return i18next.language
   }
 
   nextLang() {
-    this.i = (this.i + 1) % langs.length
+    const i18next = this.$i18n.i18next
 
-    const newLang = langs[this.i]
-    this.$i18n.i18next.changeLanguage(newLang)
+    const i = this.langs.indexOf(i18next.language)
+    const j = i >= 0
+      ? (i + 1) % this.langs.length
+      : 0
+
+    const newLang = this.langs[j]
+    i18next.changeLanguage(newLang)
   }
 
   created() {
     const i18next = this.$i18n.i18next
+
     i18next.addResourceBundle(
       'en',
       'translation',
@@ -29,5 +38,10 @@ export default class Translate extends Vue {
         'hello': 'Hello'
       }
     )
+
+    this.langs = []
+    for (let r in i18next.store.data) {
+      this.langs.push(r)
+    }
   }
 }
